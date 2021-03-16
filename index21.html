@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+      <script src="https://d3js.org/d3-queue.v3.min.js"></script>
+    <script src="linkedArc.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Josefin Slab" >
+
+
+    <style>
+      #mainDiv
+      {
+        position:absolute;
+        margin:0 auto;
+        width:80%;
+        height:100%;
+        top:0px;
+        left:10%;
+      }
+      form
+      {
+        position  :absolute;
+        top       :50px;
+        left      :00px;
+        width     :150px;
+        margin    :10px;
+      }
+      input
+      {
+        margin    :10px;
+        width     :150px;
+        font      :italic bold 12px 'arial';
+        color     :gray;
+      }
+      .tooltipTitle
+      {
+        font-family:'Arial';
+        font-size:13px;
+        font-weight:bold;
+      }
+      .tooltipVal
+      {
+        font-family:'Josefin Slab';
+        font-size:15px;
+        font-style:italic;
+      }
+      .selectionFrame
+      {
+          stroke          : gray;
+          stroke-width    : 1px;
+          stroke-dasharray: 4px;
+          stroke-opacity  : 1;
+          fill            : blue;
+          opacity         : 0.1;
+      }
+      .link
+      {
+        stroke      : blue;
+        stroke-width: 1.5;
+        opacity     : 0.5;
+        fill        : none;
+      }
+      .coloredLink
+      {
+        --stroke      : blue;
+        stroke-width: 1.5;
+        --opacity     :0.5;
+        fill        : none;
+      }
+      .linkOver
+      {
+        stroke      : red;
+        stroke-width: 2;
+        opacity     : 1;
+        fill        : none;
+      }
+      .linkNoOver
+      {
+        stroke      : blue;
+        stroke-width: 1;
+        opacity     : 0.3;
+        fill        : none;
+      }
+      .linkOnObj
+      {
+        stroke      : red;
+        stroke-width: 1;
+        opacity     : 1;
+        fill        : none;
+      }
+      .selectedLink
+      {
+        stroke      : green;
+        stroke-width: 1.5;
+        opacity     : 1;
+        fill        : none;
+      }
+      .unSelectedLink
+      {
+        stroke      : blue;
+        stroke-width: 1;
+        opacity     : 0.01;
+        fill        : none;
+      }
+      .scatters
+      {
+        stroke: black;
+        fill: green;
+      }
+
+
+    </style>
+    <title>Distribution Of Indeviduals</title>
+  </head>
+  <body>
+    <div id="mainDiv">
+      <form id="input" action="inputSubmit">
+        <fieldset>
+          <!--<legend>Input the goal</legend>
+          <p style="text-align:justify">Please enter the goal of your space for each objective with their weight and seperate them by -</p>-->
+        </fieldset>
+        <!--<input type="file" id="inputFile" multiple="true" onchange="" >-->
+      </form>
+      <p id="demo"></p>
+    </div>
+
+    <script>
+      var files=[];
+      var doc; //Document Size
+
+      doc=document.getElementById('mainDiv');
+      var mainSVG=d3.select('#mainDiv').append('svg')
+              .attr('id','mainSVG')
+              .attr('width',doc.clientWidth)
+              .attr('height',doc.clientHeight)
+              .on( "mousedown", mouseDown)
+              .on( "mouseup",mouseUp)
+              .on('click',Reset);
+      function loadFiles() {
+        var x=document.getElementById("inputFile");
+        var txt="";
+
+        if('files' in x)
+        {
+          if(x.files.length==0)
+          {
+            txt="Select one or more files";
+          }
+          else
+          {
+            for(var i=0;i<x.files.length;i++)
+            {
+              files.push(x.files[i].name);
+            }
+          }
+        }
+        else
+        {
+          if (x.value == "") {
+            txt += "Select one or more files.";
+          } else {
+            txt += "The files property is not supported by your browser!";
+            txt  += "<br>The path of the selected file: " + x.value; // If the browser does not support the files property, it will return the path of the selected file instead.
+          }
+        }
+        document.getElementById("demo").innerHTML=txt;
+
+      }
+
+
+      //var files=['VectorBased_data_set_noise.csv','dataset3D(1).csv','data_set_3.csv'];
+      //var files=['r4200p05_nao.csv','r4200p10_nao.csv','r4200p20_nao.csv'];
+      //var files=['r4200p05.csv','r4200p10.csv','r4200p20.csv'];
+      //var files=['TestFiles/r5_p1.csv','TestFiles/r5_p2.csv','TestFiles/r5_p05.csv'];
+      //var files=['TestFiles/MOEAD_dtlz2_15_to_9obj_.csv','TestFiles/MOEAD_dtlz2_15_to_13obj_.csv','TestFiles/MOEAD_dtlz2_15_to_15obj_.csv'];
+      //var files=['TestFiles/center.csv'];
+      //var files=['TestFiles/dtlz2_6obj_pop200_10iter.csv','TestFiles/dtlz2_6obj_pop200_low.csv','TestFiles/dtlz2_6obj_pop200_full.csv'];
+      //var files=['TestFiles/dtlz1_6obj_pop200_10iter.csv','TestFiles/dtlz1_6obj_pop200_50iter.csv','TestFiles/dtlz1_6obj_pop200_500iter.csv'];
+      //var files=['TestFiles/dtlz2_7obj_MOEAD.csv','TestFiles/dtlz2_7obj_pop700_cone1.csv','TestFiles/dtlz2_7obj_pop700_cone2.csv','TestFiles/dtlz2_7obj_pop500_cone1.csv','TestFiles/dtlz2_7obj_pop500_cone2.csv'];
+      //var files=['Mohamed/paper_ManyF Alg1.csv','Mohamed/paper_ManyF Alg2.csv','Mohamed/paper_ManyF Alg3.csv'];
+      var files=['Mohamed/Fitness_K_21_Alg1.csv','Mohamed/Fitness_K_21_Alg2.csv','Mohamed/Fitness_K_21_Alg3.csv','Mohamed/Fitness_K_21_Alg4.csv','Mohamed/Fitness_K_21_Alg5.csv'];
+      //var files=['WCCI/longRun_Normalized.csv'];
+      var fileNo=0;
+      var fileName;
+      //var fileName='dtlz2-50.csv';
+
+      execTool('scatters');
+    </script>
+  </body>
+</html>
